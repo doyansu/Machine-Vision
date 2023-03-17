@@ -9,6 +9,6 @@
 
 - Virtual Studio C++ https://www.raind.blog/c&cpp-zh/c&cpp_tutorial2_project_and_directory.html
 
-- openCV2.x https://blog.csdn.net/Alieon/article/details/97610026?ops_request_misc=&request_id=&biz_id=102&utm_term=VS2019%E9%85%8D%E7%BD%AEOpenCV2.4.13.6&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduweb~default-3-97610026.nonecase&spm=1018.2226.3001.4187
+- openCV2.x https://blog.csdn.net/Alieon/article/details/97610026?ops_request_misc=&request_id=&biz_id=102&utm_term=VS2019%E9%85%8D%E7%BD%AEOpenCV2.4.13.6&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduweb~default-3-97610026.nonecase&spm=1018.2226.3001.4187, https://mao455046.pixnet.net/blog/post/64438471-%E3%80%90opencv-2.4.13%E3%80%91in-visual-studio-2013
 
 - openCV3.x https://kaibaoom.tw/2019/07/18/opencv-vs2019/
