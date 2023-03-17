@@ -1,14 +1,41 @@
-#include<opencv2/opencv.hpp>
+#include <stdio.h>
+#include <opencv2/opencv.hpp>
 
 using namespace cv;
 
+Mat ConvertToGray(Mat colorImg) {
+    Mat grayImg(colorImg.rows, colorImg.cols, CV_8UC1);
+
+    for (int i = 0; i < colorImg.rows; i++)
+    {
+        for (int j = 0; j < colorImg.cols; j++)
+        {
+            Vec3b pixel = colorImg.at<Vec3b>(i, j);
+            int grayValue = 0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0];
+            grayImg.at<uchar>(i, j) = grayValue;
+        }
+    }
+    return grayImg;
+}
+
 int main() {
-	const std::string path = "../image/House256.png";
-	Mat img = imread(path, -1);
-	if (img.empty()) return -1;
-	namedWindow("HelloCV", WINDOW_AUTOSIZE);
-	imshow("HelloCV", img);
-	waitKey(0);
-	destroyWindow("HelloCV");
-	return 0;
+    const int PATH_SIZE = 6;
+    const std::string PATHS[] = {
+        "..\\image\\House256.png",
+        "..\\image\\House512.png",
+        "..\\image\\JellyBeans.png",
+        "..\\image\\Lena.png",
+        "..\\image\\Mandrill.png",
+        "..\\image\\Rappers.png",
+    };
+
+    for (std::string path : PATHS)
+    {
+        Mat colorImg = imread(path, -1);
+        Mat grayImg = ConvertToGray(colorImg);
+        imshow("¦Ç¶¥", grayImg);
+    }
+    waitKey(0);
+    destroyAllWindows();
+    return 0;
 }
