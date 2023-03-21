@@ -4,14 +4,14 @@
 using namespace cv;
 
 // Âà¦Ç¶¥
-Mat ConvertToGray(Mat original) {
-    Mat grayImage(original.size(), CV_8UC1);
+Mat ConvertToGray(Mat colorImage) {
+    Mat grayImage(colorImage.size(), CV_8UC1);
 
-    for (int i = 0; i < original.rows; i++)
+    for (int i = 0; i < colorImage.rows; i++)
     {
-        for (int j = 0; j < original.cols; j++)
+        for (int j = 0; j < colorImage.cols; j++)
         {
-            Vec3b pixel = original.at<Vec3b>(i, j);
+            Vec3b pixel = colorImage.at<Vec3b>(i, j);
             int grayValue = 0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0];
             grayImage.at<uchar>(i, j) = grayValue;
         }
@@ -33,6 +33,26 @@ Mat ConvertToBinary(Mat grayImage, uchar threshold=128) {
     return binaryImage;
 }
 
+// Âà index-color image
+Mat ConvertToIndexColor(Mat colorImage) {
+    Mat colorMap(1, 256, CV_8UC3);
+    for (int i = 0; i < 256; i++) 
+    {
+        colorMap.at<Vec3b>(0, i) = Vec3b(i, i, i);
+    }
+
+    Mat indexColorImage(colorImage.size(), CV_8UC1);
+    for (int i = 0; i < colorImage.rows; i++) {
+        for (int j = 0; j < colorImage.cols; j++) {
+            Vec3b color = colorImage.at<Vec3b>(i, j);
+            int index = (color[0] + color[1] + color[2]) / 3;
+            indexColorImage.at<Vec3b>(i, j) = colorMap.at<Vec3b>(0, index);
+        }
+    }
+    return indexColorImage;
+}
+
+
 int main() {
     const std::string PATHS[] = {
         "..\\image\\House256.png",
@@ -45,11 +65,15 @@ int main() {
 
     for (std::string path : PATHS)
     {
-        Mat image = imread(path);
-        Mat grayImage = ConvertToGray(image);
+        Mat colorImage = imread(path);
+        Mat grayImage = ConvertToGray(colorImage);
         Mat binaryImage = ConvertToBinary(grayImage, 128);
-        imshow("Gray " + path, grayImage);
-        imshow("Binary " + path, binaryImage);
+        Mat indexColorImage = ConvertToIndexColor(colorImage);
+
+        imshow("true-color " + path, colorImage);
+        imshow("gray " + path, grayImage);
+        imshow("binary " + path, binaryImage);
+        imshow("index-color " + path, indexColorImage);
         waitKey(0);
     }
     destroyAllWindows();
