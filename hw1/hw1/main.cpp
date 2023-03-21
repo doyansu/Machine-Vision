@@ -3,19 +3,34 @@
 
 using namespace cv;
 
-Mat ConvertToGray(Mat colorImg) {
-    Mat grayImg(colorImg.rows, colorImg.cols, CV_8UC1);
+// Âà¦Ç¶¥
+Mat ConvertToGray(Mat original) {
+    Mat grayImage(original.size(), CV_8UC1);
 
-    for (int i = 0; i < colorImg.rows; i++)
+    for (int i = 0; i < original.rows; i++)
     {
-        for (int j = 0; j < colorImg.cols; j++)
+        for (int j = 0; j < original.cols; j++)
         {
-            Vec3b pixel = colorImg.at<Vec3b>(i, j);
+            Vec3b pixel = original.at<Vec3b>(i, j);
             int grayValue = 0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0];
-            grayImg.at<uchar>(i, j) = grayValue;
+            grayImage.at<uchar>(i, j) = grayValue;
         }
     }
-    return grayImg;
+    return grayImage;
+}
+
+// ¦Ç¶¥¤G­È¤Æ
+Mat ConvertToBinary(Mat grayImage, uchar threshold=128) {
+    Mat binaryImage(grayImage.size(), CV_8UC1);
+    
+    for (int i = 0; i < grayImage.rows; i++)
+    {
+        for (int j = 0; j < grayImage.cols; j++)
+        {
+            binaryImage.at<uchar>(i, j) = grayImage.at<uchar>(i, j) > threshold ? 255 : 0;
+        }
+    }
+    return binaryImage;
 }
 
 int main() {
@@ -30,12 +45,13 @@ int main() {
 
     for (std::string path : PATHS)
     {
-        Mat colorImg = imread(path, -1);
-        Mat grayImg = ConvertToGray(colorImg);
-        imshow(path, grayImg);
+        Mat image = imread(path);
+        Mat grayImage = ConvertToGray(image);
+        Mat binaryImage = ConvertToBinary(grayImage, 128);
+        imshow("Gray " + path, grayImage);
+        imshow("Binary " + path, binaryImage);
+        waitKey(0);
     }
-
-    waitKey(0);
     destroyAllWindows();
     return 0;
 }
