@@ -13,10 +13,33 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="資源檔\image">
+      <UniqueIdentifier>{085f647d-2c9f-4358-8115-d48a20cda75a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>來源檔案</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Image\House256.png">
+      <Filter>資源檔\image</Filter>
+    </Image>
+    <Image Include="..\Image\House512.png">
+      <Filter>資源檔\image</Filter>
+    </Image>
+    <Image Include="..\Image\JellyBeans.png">
+      <Filter>資源檔\image</Filter>
+    </Image>
+    <Image Include="..\Image\Lena.png">
+      <Filter>資源檔\image</Filter>
+    </Image>
+    <Image Include="..\Image\Mandrill.png">
+      <Filter>資源檔\image</Filter>
+    </Image>
+    <Image Include="..\Image\Peppers.png">
+      <Filter>資源檔\image</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -72,14 +72,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\yuanhao\OpenCV24136\opencv\build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\yuanhao\OpenCV24136\opencv\build\x86\vc14\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\yuanhao\OpenCV24136\opencv\build\include;C:\yuanhao\Program\OpenCV\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yuanhao\Program\OpenCV\opencv\build\x86\vc14\lib;C:\yuanhao\OpenCV24136\opencv\build\x86\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\yuanhao\Program\OpenCV\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yuanhao\Program\OpenCV\opencv\build\x64\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -143,6 +145,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Image\House256.png" />
+    <Image Include="..\Image\House512.png" />
+    <Image Include="..\Image\JellyBeans.png" />
+    <Image Include="..\Image\Lena.png" />
+    <Image Include="..\Image\Mandrill.png" />
+    <Image Include="..\Image\Peppers.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
