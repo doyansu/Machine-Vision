@@ -19,22 +19,22 @@ Mat ConvertToGray(Mat colorImg) {
 }
 
 int main() {
-    const int PATH_SIZE = 6;
     const std::string PATHS[] = {
         "..\\image\\House256.png",
         "..\\image\\House512.png",
         "..\\image\\JellyBeans.png",
         "..\\image\\Lena.png",
         "..\\image\\Mandrill.png",
-        "..\\image\\Rappers.png",
+        "..\\image\\Peppers.png",
     };
 
     for (std::string path : PATHS)
     {
         Mat colorImg = imread(path, -1);
         Mat grayImg = ConvertToGray(colorImg);
-        imshow("¦Ç¶¥", grayImg);
+        imshow(path, grayImg);
     }
+
     waitKey(0);
     destroyAllWindows();
     return 0;
