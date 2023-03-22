@@ -116,7 +116,7 @@ public:
         return binaryImage;
     }
 
-    // 轉 indexed image
+    // 使用對應表轉成 indexed image
     Mat ConvertToIndexedColor(Mat colorImage, Vec3b colorMap[256] = nullptr) {
         if (colorMap == nullptr)
             colorMap = this->_colorMap;
