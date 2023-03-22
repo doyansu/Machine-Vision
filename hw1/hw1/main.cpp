@@ -162,13 +162,14 @@ int main() {
         "Peppers",
     };
     
+    ImageLibrary library = ImageLibrary();
+
     const string IMAGE_PATH_FORMAT = "..\\image\\%s.png";
     for (string name : IMAGE_NAMES)
     {
         const string IMAGE_PATH = format(IMAGE_PATH_FORMAT.c_str(), name.c_str());
         cout << IMAGE_PATH << '\n';
 
-        ImageLibrary library = ImageLibrary();
         Mat colorImage = imread(IMAGE_PATH);
         Mat grayImage = library.ConvertToGray(colorImage);
         Mat binaryImage = library.ConvertToBinary(colorImage, 128);
