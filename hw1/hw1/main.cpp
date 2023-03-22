@@ -12,7 +12,8 @@ private:
 
     // 建立 indexed image 的 color map
     void CreateColorMap() {
-        int colorDiv[3] = { 8, 8, 4 };
+        // B 4種, G 8種, R 8種 = 4 * 8 * 8 = 256
+        int colorDiv[3] = { 4, 8, 8 };
         for (int i = 0; i < colorDiv[0]; i++)
             for (int j = 0; j < colorDiv[1]; j++)
                 for (int k = 0; k < colorDiv[2]; k++) {
