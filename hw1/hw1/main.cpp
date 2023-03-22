@@ -12,8 +12,14 @@ private:
 
     // «Ø¥ß indexed image ªº color map
     void CreateColorMap() {
-        for (int i = 0; i < 256; i++)
-            _colorMap[i] = Vec3b(rand() % 256, rand() % 256, rand() % 256);
+        int colorDiv[3] = { 8, 8, 4 };
+        for (int i = 0; i < colorDiv[0]; i++)
+            for (int j = 0; j < colorDiv[1]; j++)
+                for (int k = 0; k < colorDiv[2]; k++) {
+                    int index = i * colorDiv[1] * colorDiv[2] + j * colorDiv[2] + k;
+                    _colorMap[index] = Vec3b(i * (256 / colorDiv[0]), j * (256 / colorDiv[1]), k * (256 / colorDiv[2]));
+                    cout << index << _colorMap[index] << '\n';
+                }
     }
 
     Mat ResizeWithoutInterpolation(Mat colorImage, int scale, bool zoomIn) {
