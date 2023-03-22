@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <opencv2/opencv.hpp>
 
 using namespace std;
@@ -9,9 +10,71 @@ class ImageLibrary
 private:
     Vec3b _colorMap[256];
 
+    // 建立 indexed image 的 color map
     void CreateColorMap() {
         for (int i = 0; i < 256; i++)
             _colorMap[i] = Vec3b(rand() % 256, rand() % 256, rand() % 256);
+    }
+
+    Mat ResizeWithoutInterpolation(Mat colorImage, int scale, bool zoomIn) {
+        Mat resizeImage;
+        if (zoomIn) {
+            resizeImage = Mat(colorImage.rows * scale, colorImage.cols * scale, CV_8UC3);
+            for (int i = 0; i < resizeImage.rows; i++)
+                for (int j = 0; j < resizeImage.cols; j++)
+                    resizeImage.at<Vec3b>(i, j) = colorImage.at<Vec3b>(i / scale, j / scale);
+        }
+        else {
+            resizeImage = Mat(colorImage.rows / scale, colorImage.cols / scale, CV_8UC3);
+            for (int i = 0; i < resizeImage.rows; i++)
+                for (int j = 0; j < resizeImage.cols; j++)
+                    resizeImage.at<Vec3b>(i, j) = colorImage.at<Vec3b>(scale * i, scale * j);
+        }
+        return resizeImage;
+    }
+
+    Mat ResizeWithInterpolation(Mat colorImage, int scale, bool zoomIn) {
+        Mat resizeImage;
+        if (zoomIn) {
+            resizeImage = Mat(colorImage.rows * scale, colorImage.cols * scale, CV_8UC3);
+
+            int height = colorImage.rows;
+            int width = colorImage.cols;
+
+            int new_height = height * scale;
+            int new_width = width * scale;
+
+            for (int i = 0; i < new_height; i++)
+                for (int j = 0; j < new_width; j++) 
+                    for (int k = 0; k < 3; k++) {
+                        double x = (double)j / scale;
+                        double y = (double)i / scale;
+                        int x1 = (int)x;
+                        int x2 = min(x1 + 1, width - 1);
+                        int y1 = (int)y;
+                        int y2 = min(y1 + 1, height - 1);
+                        double fx1 = (x2 - x) / (x2 - x1) * colorImage.at<Vec3b>(y1, x1)[k] + (x - x1) / (x2 - x1) * colorImage.at<Vec3b>(y1, x2)[k];
+                        double fx2 = (x2 - x) / (x2 - x1) * colorImage.at<Vec3b>(y2, x1)[k] + (x - x1) / (x2 - x1) * colorImage.at<Vec3b>(y2, x2)[k];
+                        double fy = (y2 - y) / (y2 - y1) * fx1 + (y - y1) / (y2 - y1) * fx2;
+                        resizeImage.at<Vec3b>(i, j)[k] = (uchar)fy;
+                    }
+        }
+        else {
+            resizeImage = Mat(colorImage.rows / scale, colorImage.cols / scale, CV_8UC3);
+            for (int w = 0; w < resizeImage.rows; w++)
+                for (int h = 0; h < resizeImage.cols; h++) {
+                    uchar color[3] = { 0, 0, 0 };
+                    for (int k = 0; k < 3; k++) {
+                        int sum = 0;
+                        for (int i = 0; i < scale; i++)
+                            for (int j = 0; j < scale; j++)
+                                sum += colorImage.at<Vec3b>(h * scale + i, w * scale + j)[k];
+                        color[k] = sum / (scale * scale);
+                    }
+                    resizeImage.at<Vec3b>(h, w) = Vec3b(color[0], color[1], color[2]);
+                }
+        }
+        return resizeImage;
     }
 
 public:
@@ -23,10 +86,8 @@ public:
     Mat ConvertToGray(Mat colorImage) {
         Mat grayImage(colorImage.size(), CV_8UC1);
 
-        for (int i = 0; i < colorImage.rows; i++)
-        {
-            for (int j = 0; j < colorImage.cols; j++)
-            {
+        for (int i = 0; i < colorImage.rows; i++) {
+            for (int j = 0; j < colorImage.cols; j++) {
                 Vec3b pixel = colorImage.at<Vec3b>(i, j);
                 int grayValue = 0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0];
                 grayImage.at<uchar>(i, j) = grayValue;
@@ -41,12 +102,8 @@ public:
         Mat binaryImage(grayImage.size(), CV_8UC1);
 
         for (int i = 0; i < grayImage.rows; i++)
-        {
             for (int j = 0; j < grayImage.cols; j++)
-            {
                 binaryImage.at<uchar>(i, j) = grayImage.at<uchar>(i, j) > threshold ? 255 : 0;
-            }
-        }
         return binaryImage;
     }
 
@@ -80,6 +137,11 @@ public:
         }
         return mappingImage;
     }
+
+    // Resize scale:放大縮小倍數，zoomIn = true 放大反之縮小，interpolation = true with interpolation
+    Mat Resize(Mat colorImage, int scale, bool zoomIn = true, bool interpolation = false) {
+        return interpolation ? ResizeWithInterpolation(colorImage, scale, zoomIn) : ResizeWithoutInterpolation(colorImage, scale, zoomIn);
+    }
 };
 
 int main() {
@@ -103,15 +165,27 @@ int main() {
         Mat grayImage = library.ConvertToGray(colorImage);
         Mat binaryImage = library.ConvertToBinary(colorImage, 128);
         Mat indexColorImage = library.ConvertToIndexedColor(colorImage);
+        Mat zoomInImage = library.Resize(colorImage, 2, true, false);
+        Mat zoomOutImage = library.Resize(colorImage, 2, false, false);
+        Mat zoomInWithInterpolationImage = library.Resize(colorImage, 2, true, true);
+        Mat zoomOutWithInterpolationImage = library.Resize(colorImage, 2, false, true);
 
         imshow("true-color " + IMAGE_PATH, colorImage);
-        imshow("gray " + IMAGE_PATH, grayImage);
-        imshow("binary " + IMAGE_PATH, binaryImage);
-        imshow("indexed " + IMAGE_PATH, indexColorImage);
+        //imshow("gray " + IMAGE_PATH, grayImage);
+        //imshow("binary " + IMAGE_PATH, binaryImage);
+        //imshow("indexed " + IMAGE_PATH, indexColorImage);
+        imshow("zoomInImage " + IMAGE_PATH, zoomInImage);
+        imshow("zoomOutImage " + IMAGE_PATH, zoomOutImage);
+        imshow("zoomInWithInterpolationImage " + IMAGE_PATH, zoomInWithInterpolationImage);
+        imshow("zoomOutWithInterpolationImage " + IMAGE_PATH, zoomOutWithInterpolationImage);
 
         imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_gray").c_str()), grayImage);
         imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_binary").c_str()), binaryImage);
         imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_indexed").c_str()), indexColorImage);
+        imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_zoomInImage").c_str()), zoomInImage);
+        imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_zoomOutImage").c_str()), zoomOutImage);
+        imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_zoomInWithInterpolationImage").c_str()), zoomInWithInterpolationImage);
+        imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_zoomOutWithInterpolationImage").c_str()), zoomOutWithInterpolationImage);
         
         waitKey(0);
         destroyAllWindows();
