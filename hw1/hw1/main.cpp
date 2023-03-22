@@ -36,13 +36,15 @@ private:
     Mat ResizeWithInterpolation(Mat colorImage, int scale, bool zoomIn) {
         Mat resizeImage;
         if (zoomIn) {
-            resizeImage = Mat(colorImage.rows * scale, colorImage.cols * scale, CV_8UC3);
-
+            // Bilinear Interpolation
+            // 公式參考 https://www.cnblogs.com/xpvincent/archive/2013/03/15/2961448.html
             int height = colorImage.rows;
             int width = colorImage.cols;
 
             int new_height = height * scale;
             int new_width = width * scale;
+
+            resizeImage = Mat(new_height, new_width, CV_8UC3);
 
             for (int i = 0; i < new_height; i++)
                 for (int j = 0; j < new_width; j++) 
@@ -171,9 +173,9 @@ int main() {
         Mat zoomOutWithInterpolationImage = library.Resize(colorImage, 2, false, true);
 
         imshow("true-color " + IMAGE_PATH, colorImage);
-        //imshow("gray " + IMAGE_PATH, grayImage);
-        //imshow("binary " + IMAGE_PATH, binaryImage);
-        //imshow("indexed " + IMAGE_PATH, indexColorImage);
+        imshow("gray " + IMAGE_PATH, grayImage);
+        imshow("binary " + IMAGE_PATH, binaryImage);
+        imshow("indexed " + IMAGE_PATH, indexColorImage);
         imshow("zoomInImage " + IMAGE_PATH, zoomInImage);
         imshow("zoomOutImage " + IMAGE_PATH, zoomOutImage);
         imshow("zoomInWithInterpolationImage " + IMAGE_PATH, zoomInWithInterpolationImage);
