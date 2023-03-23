@@ -44,7 +44,6 @@ private:
         Mat resizeImage;
         if (zoomIn) {
             // Bilinear Interpolation
-            // 公式參考 https://www.cnblogs.com/xpvincent/archive/2013/03/15/2961448.html
             int height = colorImage.rows;
             int width = colorImage.cols;
 
