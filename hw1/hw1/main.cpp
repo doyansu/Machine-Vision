@@ -8,18 +8,18 @@ using namespace cv;
 class ImageLibrary 
 {
 private:
-    Vec3b _colorMap[256];
+    Mat _colorMap;
 
     // 建立 indexed image 的 color map
     void CreateColorMap() {
+        _colorMap = Mat(1, 256, CV_8UC3);
         // B 4種, G 8種, R 8種 = 4 * 8 * 8 = 256
         int colorDiv[3] = { 4, 8, 8 };
         for (int i = 0; i < colorDiv[0]; i++)
             for (int j = 0; j < colorDiv[1]; j++)
                 for (int k = 0; k < colorDiv[2]; k++) {
                     int index = i * colorDiv[1] * colorDiv[2] + j * colorDiv[2] + k;
-                    _colorMap[index] = Vec3b(i * (256 / colorDiv[0]), j * (256 / colorDiv[1]), k * (256 / colorDiv[2]));
-                    cout << index << _colorMap[index] << '\n';
+                    _colorMap.at<Vec3b>(0, index) = Vec3b(i * (256 / colorDiv[0]), j * (256 / colorDiv[1]), k * (256 / colorDiv[2]));
                 }
     }
 
@@ -91,6 +91,10 @@ public:
         this->CreateColorMap();
     }
 
+    Mat GetColorMap() {
+        return this->_colorMap;
+    }
+
     // 轉灰階
     Mat ConvertToGray(Mat colorImage) {
         Mat grayImage(colorImage.size(), CV_8UC1);
@@ -117,9 +121,9 @@ public:
     }
 
     // 使用對應表轉成 indexed image
-    Mat ConvertToIndexedColor(Mat colorImage, Vec3b colorMap[256] = nullptr) {
+    Mat ConvertToIndexedColor(Mat colorImage, Mat* colorMap = nullptr) {
         if (colorMap == nullptr)
-            colorMap = this->_colorMap;
+            colorMap =  &(this->_colorMap);
 
         Mat indexImage(colorImage.size(), CV_8UC1);
         Mat mappingImage(colorImage.size(), CV_8UC3);
@@ -130,7 +134,7 @@ public:
                 uchar index = 0;
                 int minDist = MAX_DIST;
                 for (int k = 0; k < 256; k++) {
-                    Vec3b mapColor = colorMap[k];
+                    Vec3b mapColor = colorMap->at<Vec3b>(0, k);
                     int dist =
                         (color[0] - mapColor[0]) * (color[0] - mapColor[0]) +
                         (color[1] - mapColor[1]) * (color[1] - mapColor[1]) +
@@ -141,7 +145,7 @@ public:
                     }
                 }
                 indexImage.at<uchar>(i, j) = index;
-                mappingImage.at<Vec3b>(i, j) = colorMap[index];
+                mappingImage.at<Vec3b>(i, j) = colorMap->at<Vec3b>(0, index);
             }
         }
         return mappingImage;
@@ -162,10 +166,17 @@ int main() {
         "Mandrill",
         "Peppers",
     };
+
+    const string IMAGE_PATH_FORMAT = "..\\image\\%s.png";
     
     ImageLibrary library = ImageLibrary();
 
-    const string IMAGE_PATH_FORMAT = "..\\image\\%s.png";
+    // show color map
+    Mat colorMap = library.GetColorMap();
+    resize(colorMap, colorMap, Size(1024, 8), INTER_LINEAR);
+    imshow("color map", colorMap);
+    imwrite(format(IMAGE_PATH_FORMAT.c_str(), "color_map.png"), colorMap);
+
     for (string name : IMAGE_NAMES)
     {
         const string IMAGE_PATH = format(IMAGE_PATH_FORMAT.c_str(), name.c_str());
