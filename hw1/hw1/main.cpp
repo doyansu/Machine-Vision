@@ -61,9 +61,9 @@ private:
                         int x2 = min(x1 + 1, width - 1);
                         int y1 = (int)y;
                         int y2 = min(y1 + 1, height - 1);
-                        double fx1 = (x2 - x) / (x2 - x1) * colorImage.at<Vec3b>(y1, x1)[k] + (x - x1) / (x2 - x1) * colorImage.at<Vec3b>(y1, x2)[k];
-                        double fx2 = (x2 - x) / (x2 - x1) * colorImage.at<Vec3b>(y2, x1)[k] + (x - x1) / (x2 - x1) * colorImage.at<Vec3b>(y2, x2)[k];
-                        double fy = (y2 - y) / (y2 - y1) * fx1 + (y - y1) / (y2 - y1) * fx2;
+                        double fx1 = (x2 - x) / ((double)x2 - x1) * colorImage.at<Vec3b>(y1, x1)[k] + (x - x1) / ((double)x2 - x1) * colorImage.at<Vec3b>(y1, x2)[k];
+                        double fx2 = (x2 - x) / ((double)x2 - x1) * colorImage.at<Vec3b>(y2, x1)[k] + (x - x1) / ((double)x2 - x1) * colorImage.at<Vec3b>(y2, x2)[k];
+                        double fy = (y2 - y) / ((double)y2 - y1) * fx1 + (y - y1) / ((double)y2 - y1) * fx2;
                         resizeImage.at<Vec3b>(i, j)[k] = (uchar)fy;
                     }
         }
