@@ -1,7 +1,6 @@
 #include "ImageLibrary.h"
 
 namespace image_model {
-
     // 轉灰階
     Mat ImageLibrary::ConvertToGray(Mat colorImage) {
         Mat grayImage(colorImage.size(), CV_8UC1);
@@ -16,7 +15,7 @@ namespace image_model {
         return grayImage;
     }
 
-    // 灰階二值化
+    // 二值化
     Mat ImageLibrary::ConvertToBinary(Mat colorImage, uchar threshold) {
         Mat grayImage = this->ConvertToGray(colorImage);
         Mat binaryImage(grayImage.size(), CV_8UC1);
@@ -25,5 +24,17 @@ namespace image_model {
             for (int col = 0; col < grayImage.cols; col++)
                 binaryImage.at<uchar>(row, col) = grayImage.at<uchar>(row, col) > threshold ? 255 : 0;
         return binaryImage;
+    }
+
+    // 轉 Labeling Image
+    Mat ImageLibrary::ConvertToLabeling(Mat colorImage, Connected connected, int* objNumber){
+        int count = 0;
+        Mat binaryImage = this->ConvertToBinary(colorImage);
+        Mat labelingImage(binaryImage.size(), CV_8UC3);
+
+        if (objNumber != nullptr)
+            *objNumber = count;
+
+        return labelingImage;
     }
 }
