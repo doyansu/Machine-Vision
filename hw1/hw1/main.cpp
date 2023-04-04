@@ -174,7 +174,7 @@ int main() {
     Mat colorMap = library.GetColorMap();
     resize(colorMap, colorMap, Size(1024, 8), INTER_LINEAR);
     imshow("color map", colorMap);
-    imwrite(format(IMAGE_PATH_FORMAT.c_str(), "color_map.png"), colorMap);
+    imwrite(format(IMAGE_PATH_FORMAT.c_str(), "color_map"), colorMap);
 
     for (string name : IMAGE_NAMES)
     {
