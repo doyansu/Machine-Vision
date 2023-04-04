@@ -22,7 +22,10 @@ int main() {
         std::cout << IMAGE_PATH << '\n';
 
         Mat colorImage = imread(IMAGE_PATH);
+        Mat binaryImage = library.ConvertToBinary(colorImage, 128);
+
         cv::imshow("true-color " + IMAGE_PATH, colorImage);
+        cv::imshow("binary " + IMAGE_PATH, binaryImage);
 
         // 4-connected labeling 
         int objNumber = 0;
@@ -35,6 +38,7 @@ int main() {
         cv::imshow("labeling 8-connected " + objNumber + IMAGE_PATH, connectedEightImage);
         std::cout << "8-connected object number : " << objNumber << '\n';
 
+        imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_binary").c_str()), binaryImage);
         imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_labeling 4-connected").c_str()), connectedFourImage);
         imwrite(format(IMAGE_PATH_FORMAT.c_str(), (name + "_labeling 8-connected").c_str()), connectedEightImage);
 
