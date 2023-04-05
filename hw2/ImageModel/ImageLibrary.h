@@ -21,7 +21,7 @@ namespace image_model {
         // 二值化
         Mat ConvertToBinary(Mat colorImage, uchar threshold = 128);
         // Labeling Image，connected: 連通數，objNumber: 寫入 label 的物件數量，sizeFilter: Size Filtering
-        Mat ConvertToLabeling(Mat colorImage, Connected connected = Connected::Four, int* objNumber = nullptr, int sizeFilter = -1);
+        Mat ConvertToLabeling(Mat binaryImage, Connected connected = Connected::Four, int* objNumber = nullptr, int sizeFilter = -1);
 
     private:
 
