@@ -1,6 +1,5 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <algorithm>
 
 using namespace std;
 using namespace cv;
@@ -149,49 +148,51 @@ public:
     }
 };
 
+class ImageInfo 
+{
+public:
+    string _fileName;
+    string _extension;
+    int _threshold;
+    int _layer;
+
+    ImageInfo(string fileName, int threshold, int layer) {
+        this->_fileName = fileName;
+        this->_threshold = threshold;
+        this->_layer = layer;
+        this->_extension = ".png";
+    };
+};
+
 int main() {
     const int IMAGE_NUM = 4; // 圖片數
     const string IMAGE_FOLDER = "..\\image"; // 圖片存放資料夾
     const string IMAGE_PATH_FORMAT = IMAGE_FOLDER + "\\%s.png";
+    vector<ImageInfo> images;
 
-    // image 檔名
-    const string IMAGE_NAMES[IMAGE_NUM] = {
-        "1",
-        "2",
-        "3",
-        "4",
-    };
-
-    // threshold 設定
-    const int THRESHOLD_SETTRING[IMAGE_NUM] = {
-        135,
-        245,
-        155,
-        254,
-    };
-
-    // layer 設定
-    const int LAYER_SETTING[IMAGE_NUM] = {
-        8, 9, 8, 9
-    };
+    // 圖片檔名、threshold、layer 設定
+    images.push_back(ImageInfo("1", 135, 8));
+    images.push_back(ImageInfo("2", 245, 9));
+    images.push_back(ImageInfo("3", 155, 8));
+    images.push_back(ImageInfo("4", 254, 9));
 
     ImageLibrary library = ImageLibrary();
 
-    for (int i = 0; i < IMAGE_NUM; i++)
+    for (ImageInfo image : images)
     {
-        const string IMAGE_NAME = IMAGE_NAMES[i];
+        const string IMAGE_NAME = image._fileName;
         const string IMAGE_PATH = format(IMAGE_PATH_FORMAT.c_str(), IMAGE_NAME.c_str());
         std::cout << IMAGE_PATH << '\n';
 
         // 讀取圖片、二值化
         Mat colorImage = imread(IMAGE_PATH);
-        Mat binaryImage = library.ConvertToBinary(colorImage, THRESHOLD_SETTRING[i]);
+        Mat binaryImage = library.ConvertToBinary(colorImage, image._threshold);
 
         imshow("true-color " + IMAGE_PATH, colorImage);
         imshow("binary " + IMAGE_PATH, binaryImage);
         
         // Quadtree 分裂圖片
-        for (int layer = 1; layer <= LAYER_SETTING[i]; layer++)
+        for (int layer = 1; layer <= image._layer; layer++)
         {
             Mat splittedImage = library.SplitImageByQuadtree(binaryImage, layer);
             imshow("splitted layer" + to_string(layer) + IMAGE_PATH, splittedImage);
