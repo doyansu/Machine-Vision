@@ -5,18 +5,109 @@
 using namespace std;
 using namespace cv;
 
-class ImageLibrary
+class QuadtreeNode
 {
 private:
+    Rect _rect;                     // 節點範圍
+    int _level;                     // 節點層數
+    bool _isLeaf;                   // 是葉節點
+    Vec3b _color;                   // 節點顏色
+    QuadtreeNode* _childrens[4];    // 子節點
 
+    // 檢查顏色數量是否多於一種
+    bool CheakColor(const Mat& image) {
+        for (int i = _rect.x; i < _rect.x + _rect.width; i++) 
+            for (int j = _rect.y; j < _rect.y + _rect.height; j++) 
+                if (image.at<Vec3b>(i, j)[0] != image.at<Vec3b>(_rect.x, _rect.y)[0] ||
+                    image.at<Vec3b>(i, j)[1] != image.at<Vec3b>(_rect.x, _rect.y)[1] ||
+                    image.at<Vec3b>(i, j)[2] != image.at<Vec3b>(_rect.x, _rect.y)[2])
+                    return true;
+        return false;
+    }
+
+public:
+    QuadtreeNode(Rect rect, int level) {
+        this->_rect = rect;
+        this->_level = level;
+        this->_isLeaf = true;
+        this->_color = Vec3b(128, 128, 128);
+        for (int i = 0; i < 4; i++) {
+            this->_childrens[i] = nullptr;
+        }
+    }
+
+    ~QuadtreeNode() {
+        for (int i = 0; i < 4; i++) 
+            if (this->_childrens[i]) 
+                delete this->_childrens[i];
+    }
+    
+    // 分裂節點
+    bool SplitNode(const Mat& image, int maxLevel = INT_MAX) {
+        // 不是葉節點或達到最大上限不分裂
+        if (_level > maxLevel || !_isLeaf)
+            return false;
+
+        bool continueSplit = false;
+
+        // 多於一種顏色繼續分裂
+        if (CheakColor(image)) {
+            int half_width = _rect.width / 2;
+            int half_height = _rect.height / 2;
+
+            _childrens[0] = new QuadtreeNode(Rect(_rect.x, _rect.y, half_width, half_height), _level + 1);
+            _childrens[1] = new QuadtreeNode(Rect(_rect.x + half_width, _rect.y, half_width, half_height), _level + 1);
+            _childrens[2] = new QuadtreeNode(Rect(_rect.x, _rect.y + half_height, half_width, half_height), _level + 1);
+            _childrens[3] = new QuadtreeNode(Rect(_rect.x + half_width, _rect.y + half_height, half_width, half_height), _level + 1);
+            
+            _isLeaf = false;
+
+            for (int i = 0; i < 4; i++) 
+                _childrens[i]->SplitNode(image, maxLevel);
+            
+            continueSplit = true;
+        }
+        else // 只有一種顏色
+            _color = image.at<Vec3b>(_rect.x, _rect.y);
+        
+        return continueSplit;
+    }
+
+    // 將 node 繪製到 image
+    void DrawNode(Mat& image) {
+        if (this->_isLeaf) {
+            for (int i = _rect.x; i < _rect.x + _rect.width; i++)
+                for (int j = _rect.y; j < _rect.y + _rect.height; j++)
+                    image.at<Vec3b>(i, j) = _color;
+        }
+        else {
+            for (int i = 0; i < 4; i++)
+                this->_childrens[i]->DrawNode(image);
+        }
+    }
+
+    bool IsLeaf() {
+        return this->_isLeaf;
+    }
+
+    QuadtreeNode* GetChildren(int index) {
+        if (index < 0 || index >= 4)
+            throw "index out of range";
+        return this->_childrens[index];
+    }
+};
+
+
+class ImageLibrary
+{
 public:
     ImageLibrary() {
         
     }
 
     // 轉灰階
-    Mat ConvertToGray(Mat colorImage) {
-        Mat grayImage(colorImage.size(), CV_8UC1);
+    Mat ConvertToGray(const Mat& colorImage) {
+        Mat grayImage(colorImage.size(), CV_8UC3);
 
         for (int i = 0; i < colorImage.rows; i++) {
             for (int j = 0; j < colorImage.cols; j++) {
@@ -29,7 +120,7 @@ public:
     }
 
     // 灰階二值化
-    Mat ConvertToBinary(Mat colorImage, uchar threshold = 128) {
+    Mat ConvertToBinary(const Mat& colorImage, uchar threshold = 128) {
         Mat grayImage = this->ConvertToGray(colorImage);
         Mat binaryImage(grayImage.size(), CV_8UC1);
 
@@ -39,98 +130,29 @@ public:
         return binaryImage;
     }
 
+    // 依據 layer使用 Quadtree 分裂圖片
+    Mat SplitImageByQuadtree(const Mat& srcImage, int layer = INT_MAX) {
+        Mat splitImage = srcImage;
+        Mat resultImage(srcImage.size(), CV_8UC3);
+        // 如果是 binaryImage 將圖片轉為 3 通道
+        if (srcImage.type() != CV_8UC3)
+        {
+            splitImage = Mat(srcImage.size(), CV_8UC3);
+            for (int i = 0; i < srcImage.rows; i++)
+                for (int j = 0; j < srcImage.cols; j++)
+                    splitImage.at<Vec3b>(i, j) = Vec3b(srcImage.at<uchar>(i, j), srcImage.at<uchar>(i, j), srcImage.at<uchar>(i, j));
+        }
+        QuadtreeNode root = QuadtreeNode(Rect(0, 0, srcImage.cols, srcImage.rows), 0);
+        root.SplitNode(splitImage, layer);
+        root.DrawNode(resultImage);
+        return resultImage;
+    }
 };
-/*
-class QuadtreeNode
-{
-public:
-    Rect rect; // ??矩形?域
-    int level; // ????
-    bool is_leaf; // 是否????
-    Scalar color; // ????色
-    QuadtreeNode* children[4]; // 子??指???
-
-    // 构造函?
-    QuadtreeNode(Rect rect, int level)
-    {
-        this->rect = rect;
-        this->level = level;
-        this->is_leaf = true;
-        this->color = Scalar(0, 0, 0);
-        for (int i = 0; i < 4; i++) {
-            this->children[i] = nullptr;
-        }
-    }
-
-    // 分裂??，返回是否成功
-    bool split(Mat& image)
-    {
-        if (this->is_leaf && this->level < 4) {
-            // ?算子??矩形?域
-            int x = this->rect.x;
-            int y = this->rect.y;
-            int w = this->rect.width / 2;
-            int h = this->rect.height / 2;
-
-            // ?建子??
-            this->children[0] = new QuadtreeNode(Rect(x, y, w, h), this->level + 1);
-            this->children[1] = new QuadtreeNode(Rect(x + w, y, w, h), this->level + 1);
-            this->children[2] = new QuadtreeNode(Rect(x, y + h, w, h), this->level + 1);
-            this->children[3] = new QuadtreeNode(Rect(x + w, y + h, w, h), this->level + 1);
-
-            // 更新父???性
-            this->is_leaf = false;
-            this->color = Scalar(0, 0, 0);
-
-            // ?查子??是否需要分裂
-            for (int i = 0; i < 4; i++) {
-                if (this->children[i]->check_color(image)) {
-                    this->children[i]->split(image);
-                }
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    // ?查??矩形?域?像素?色是否相同
-    bool check_color(Mat& image)
-    {
-        if (this->is_leaf) {
-            // ?算矩形?域
-            int x = this->rect.x;
-            int y = this->rect.y;
-            int w = this->rect.width;
-            int h = this->rect.height;
-
-            // ??矩形?域?像素?色?量
-            map<Scalar, int> color_count;
-            for (int i = y; i < y + h; i++) {
-                for (int j = x; j < x + w; j++) {
-                    Scalar color = image.at<uchar>(i, j);
-                    color_count[color]++;
-                }
-            }
-
-            // 如果?色?量不? 1
-            if (color_count.size() > 1) {
-                return true;
-            }
-
-            // 更新???色
-            this->color = color_count.begin()->first;
-        }
-
-        return false;
-    }
-};*/
 
 int main() {
     const int IMAGE_NUM = 4; // 圖片數
     const string IMAGE_FOLDER = "..\\image"; // 圖片存放資料夾
-    const string IMAGE_PATH_FORMAT = IMAGE_FOLDER + "\\% s.png";
+    const string IMAGE_PATH_FORMAT = IMAGE_FOLDER + "\\%s.png";
 
     // image 檔名
     const string IMAGE_NAMES[IMAGE_NUM] = {
@@ -148,6 +170,11 @@ int main() {
         254,
     };
 
+    // layer 設定
+    const int LAYER_SETTING[IMAGE_NUM] = {
+        8, 9, 8, 9
+    };
+
     ImageLibrary library = ImageLibrary();
 
     for (int i = 0; i < IMAGE_NUM; i++)
@@ -156,14 +183,20 @@ int main() {
         const string IMAGE_PATH = format(IMAGE_PATH_FORMAT.c_str(), IMAGE_NAME.c_str());
         std::cout << IMAGE_PATH << '\n';
 
-        // 讀取圖片
+        // 讀取圖片、二值化
         Mat colorImage = imread(IMAGE_PATH);
-        Mat grayImage = library.ConvertToGray(colorImage);
         Mat binaryImage = library.ConvertToBinary(colorImage, THRESHOLD_SETTRING[i]);
 
         imshow("true-color " + IMAGE_PATH, colorImage);
-        imshow("gray " + IMAGE_PATH, grayImage);
         imshow("binary " + IMAGE_PATH, binaryImage);
+        
+        // Quadtree 分裂圖片
+        for (int layer = 1; layer <= LAYER_SETTING[i]; layer++)
+        {
+            Mat splittedImage = library.SplitImageByQuadtree(binaryImage, layer);
+            imshow("splitted layer" + to_string(layer) + IMAGE_PATH, splittedImage);
+            imwrite(format(IMAGE_PATH_FORMAT.c_str(), (IMAGE_NAME + "_splitted layer" + to_string(layer)).c_str()), splittedImage);
+        }
 
         cv::waitKey(0);
         cv::destroyAllWindows();
