@@ -84,16 +84,6 @@ public:
                 this->_childrens[i]->DrawNode(image);
         }
     }
-
-    bool IsLeaf() {
-        return this->_isLeaf;
-    }
-
-    QuadtreeNode* GetChildren(int index) {
-        if (index < 0 || index >= 4)
-            throw "index out of range";
-        return this->_childrens[index];
-    }
 };
 
 
