@@ -181,6 +181,7 @@ int main() {
 
         imshow("true-color " + IMAGE_PATH, colorImage);
         imshow("binary " + IMAGE_PATH, binaryImage);
+        imwrite(format(IMAGE_PATH_FORMAT.c_str(), (IMAGE_NAME + "_binary").c_str()), binaryImage);
         
         // Quadtree ¤Á¤À¹Ï¤ù
         for (int layer = 1; layer <= image._layer; layer++)
