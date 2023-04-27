@@ -51,13 +51,13 @@ public:
 
         // 多於一種顏色繼續分裂
         if (CheakColor(image)) {
-            int half_width = _rect.width / 2;
-            int half_height = _rect.height / 2;
+            int halfWidth = _rect.width / 2;
+            int halfHeight = _rect.height / 2;
 
-            _childrens[0] = new QuadtreeNode(Rect(_rect.x, _rect.y, half_width, half_height), _level + 1);
-            _childrens[1] = new QuadtreeNode(Rect(_rect.x + half_width, _rect.y, half_width, half_height), _level + 1);
-            _childrens[2] = new QuadtreeNode(Rect(_rect.x, _rect.y + half_height, half_width, half_height), _level + 1);
-            _childrens[3] = new QuadtreeNode(Rect(_rect.x + half_width, _rect.y + half_height, half_width, half_height), _level + 1);
+            _childrens[0] = new QuadtreeNode(Rect(_rect.x, _rect.y, halfWidth, halfHeight), _level + 1);
+            _childrens[1] = new QuadtreeNode(Rect(_rect.x + halfWidth, _rect.y, halfWidth, halfHeight), _level + 1);
+            _childrens[2] = new QuadtreeNode(Rect(_rect.x, _rect.y + halfHeight, halfWidth, halfHeight), _level + 1);
+            _childrens[3] = new QuadtreeNode(Rect(_rect.x + halfWidth, _rect.y + halfHeight, halfWidth, halfHeight), _level + 1);
             
             _isLeaf = false;
 
