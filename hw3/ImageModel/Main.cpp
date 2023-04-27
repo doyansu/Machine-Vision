@@ -51,6 +51,9 @@ public:
 
         // 多於一種顏色繼續分裂
         if (CheakColor(image)) {
+            continueSplit = true;
+            _isLeaf = false;
+
             int halfWidth = _rect.width / 2;
             int halfHeight = _rect.height / 2;
 
@@ -58,13 +61,9 @@ public:
             _childrens[1] = new QuadtreeNode(Rect(_rect.x + halfWidth, _rect.y, halfWidth, halfHeight), _level + 1);
             _childrens[2] = new QuadtreeNode(Rect(_rect.x, _rect.y + halfHeight, halfWidth, halfHeight), _level + 1);
             _childrens[3] = new QuadtreeNode(Rect(_rect.x + halfWidth, _rect.y + halfHeight, halfWidth, halfHeight), _level + 1);
-            
-            _isLeaf = false;
 
             for (int i = 0; i < 4; i++) 
                 _childrens[i]->SplitNode(image, maxLevel);
-            
-            continueSplit = true;
         }
         else // 只有一種顏色
             _color = image.at<Vec3b>(_rect.x, _rect.y);
@@ -73,15 +72,15 @@ public:
     }
 
     // 將 node 繪製到 image
-    void DrawNode(Mat& image) {
-        if (this->_isLeaf) {
+    void DrawNode(Mat& image, int maxLevel = INT_MAX) {
+        if (this->_isLeaf || this->_level >= maxLevel) {
             for (int i = _rect.x; i < _rect.x + _rect.width; i++)
                 for (int j = _rect.y; j < _rect.y + _rect.height; j++)
-                    image.at<Vec3b>(i, j) = _color;
+                    image.at<Vec3b>(i, j) = this->_color;
         }
         else {
             for (int i = 0; i < 4; i++)
-                this->_childrens[i]->DrawNode(image);
+                this->_childrens[i]->DrawNode(image, maxLevel);
         }
     }
 };
@@ -119,12 +118,12 @@ public:
         return binaryImage;
     }
 
-    // 依據 layer 使用 Quadtree 切分圖片
+    // Quadtree
     Mat SplitImageByQuadtree(const Mat& srcImage, int layer = INT_MAX) {
         Mat splitImage = srcImage;
         Mat resultImage(srcImage.size(), CV_8UC3);
 
-        // 如果是 binaryImage 將圖片轉為 3 通道
+        // 將 binaryImage 轉為 3 通道
         if (srcImage.type() != CV_8UC3)
         {
             splitImage = Mat(srcImage.size(), CV_8UC3);
@@ -133,7 +132,7 @@ public:
                     splitImage.at<Vec3b>(i, j) = Vec3b(srcImage.at<uchar>(i, j), srcImage.at<uchar>(i, j), srcImage.at<uchar>(i, j));
         }
 
-        // 建立 Quadtree 並進行切分
+        // 切分並繪製 Quadtree 圖片
         QuadtreeNode root = QuadtreeNode(Rect(0, 0, srcImage.cols, srcImage.rows), 0);
         root.SplitNode(splitImage, layer);
         root.DrawNode(resultImage);
@@ -183,12 +182,24 @@ int main() {
         imshow("binary " + IMAGE_PATH, binaryImage);
         imwrite(format(IMAGE_PATH_FORMAT.c_str(), (IMAGE_NAME + "_binary").c_str()), binaryImage);
         
-        // Quadtree 切分圖片
+        // 將 binaryImage 轉為 3 通道
+        Mat binaryImageChannel3 = binaryImage;
+        binaryImageChannel3 = Mat(binaryImage.size(), CV_8UC3);
+        for (int i = 0; i < binaryImage.rows; i++)
+            for (int j = 0; j < binaryImage.cols; j++)
+                binaryImageChannel3.at<Vec3b>(i, j) = Vec3b(binaryImage.at<uchar>(i, j), binaryImage.at<uchar>(i, j), binaryImage.at<uchar>(i, j));
+
+        // 建立 Quadtree 並進行切分
+        QuadtreeNode root = QuadtreeNode(Rect(0, 0, binaryImage.cols, binaryImage.rows), 0);
+        root.SplitNode(binaryImageChannel3);
+
+        // 根據 layer 繪製 Quadtree 圖片
         for (int layer = 1; layer <= image._layer; layer++)
         {
-            Mat splittedImage = library.SplitImageByQuadtree(binaryImage, layer);
-            imshow("splitted layer" + to_string(layer) + IMAGE_PATH, splittedImage);
-            imwrite(format(IMAGE_PATH_FORMAT.c_str(), (IMAGE_NAME + "_splitted layer" + to_string(layer)).c_str()), splittedImage);
+            Mat resultImage(binaryImage.size(), CV_8UC3);
+            root.DrawNode(resultImage, layer);
+            imshow("splitted layer" + to_string(layer) + IMAGE_PATH, resultImage);
+            imwrite(format(IMAGE_PATH_FORMAT.c_str(), (IMAGE_NAME + "_splitted layer" + to_string(layer)).c_str()), resultImage);
         }
 
         cv::waitKey(0);
