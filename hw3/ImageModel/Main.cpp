@@ -145,7 +145,6 @@ class ImageInfo
 {
 public:
     string _fileName;
-    string _extension;
     int _threshold;
     int _layer;
 
@@ -153,7 +152,6 @@ public:
         this->_fileName = fileName;
         this->_threshold = threshold;
         this->_layer = layer;
-        this->_extension = ".png";
     };
 };
 
@@ -184,7 +182,7 @@ int main() {
         imshow("true-color " + IMAGE_PATH, colorImage);
         imshow("binary " + IMAGE_PATH, binaryImage);
         
-        // Quadtree 分裂圖片
+        // Quadtree 切分圖片
         for (int layer = 1; layer <= image._layer; layer++)
         {
             Mat splittedImage = library.SplitImageByQuadtree(binaryImage, layer);
