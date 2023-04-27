@@ -119,10 +119,11 @@ public:
         return binaryImage;
     }
 
-    // 依據 layer使用 Quadtree 分裂圖片
+    // 依據 layer 使用 Quadtree 切分圖片
     Mat SplitImageByQuadtree(const Mat& srcImage, int layer = INT_MAX) {
         Mat splitImage = srcImage;
         Mat resultImage(srcImage.size(), CV_8UC3);
+
         // 如果是 binaryImage 將圖片轉為 3 通道
         if (srcImage.type() != CV_8UC3)
         {
@@ -131,6 +132,8 @@ public:
                 for (int j = 0; j < srcImage.cols; j++)
                     splitImage.at<Vec3b>(i, j) = Vec3b(srcImage.at<uchar>(i, j), srcImage.at<uchar>(i, j), srcImage.at<uchar>(i, j));
         }
+
+        // 建立 Quadtree 並進行切分
         QuadtreeNode root = QuadtreeNode(Rect(0, 0, srcImage.cols, srcImage.rows), 0);
         root.SplitNode(splitImage, layer);
         root.DrawNode(resultImage);
