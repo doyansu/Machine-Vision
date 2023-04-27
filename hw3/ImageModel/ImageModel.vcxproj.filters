@@ -16,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
-      <Filter>資源檔</Filter>
+      <Filter>來源檔案</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
