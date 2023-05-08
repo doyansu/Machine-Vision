@@ -72,8 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\yuanhao\Program\OpenCV\opencv\build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\yuanhao\Program\OpenCV\opencv\build\x86\vc14\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\yuanhao\Program\OpenCV\opencv\build\include;C:\yuanhao\OpenCV24136\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yuanhao\OpenCV24136\opencv\build\x86\vc14\lib;C:\yuanhao\Program\OpenCV\opencv\build\x86\vc14\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
