@@ -12,13 +12,30 @@ public:
     Filter() {}
 
     void SetMask(int mask) {
-        this->_mask = (mask < 3) ? 3 : (mask | 1); // 確保 mask 至少為3，且是奇數
+        // 確保 mask 至少為3，且是奇數
+        this->_mask = (mask < 3) ? 3 : (mask | 1);
     }
 
     virtual Mat FilterImage(const Mat& sourceImage) = 0;
 
-private:
+protected:
     int _mask = 3;
+
+    // padding 填充圖片
+    virtual Mat PadImage(const Mat& image, int paddingSize)
+    {
+        int height = image.rows;
+        int width = image.cols;
+        Mat padded = Mat(height + paddingSize * 2, width + paddingSize * 2, image.type());
+
+        // 將原始圖像複製到新的 Mat 對像中心區域
+        image.copyTo(padded(cv::Rect(paddingSize, paddingSize, width, height)));
+
+        // 複製邊界像素值
+        copyMakeBorder(image, padded, paddingSize, paddingSize, paddingSize, paddingSize, BORDER_REPLICATE);
+
+        return padded;
+    }
 };
 
 class MeanFilter : public Filter
@@ -29,7 +46,20 @@ public:
     }
 
     Mat FilterImage(const Mat& sourceImage) override {
-
+        Mat resultImage = Mat(sourceImage.size(), CV_8UC3);
+        Mat paddedImage = this->PadImage(sourceImage, this->_mask / 2);
+        for (int i = 0; i < resultImage.rows; i++)
+            for (int j = 0; j < resultImage.cols; j++)
+            {
+                // 相加後平均
+                int value = 0;
+                for (int x = 0; x < this->_mask; x++)
+                    for (int y = 0; y < this->_mask; y++)
+                        value += paddedImage.at<Vec3b>(i + x, j + y)[0];
+                value /= this->_mask * this->_mask;
+                resultImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
+            }
+        return resultImage;
     }
 };
 
@@ -41,7 +71,22 @@ public:
     }
 
     Mat FilterImage(const Mat& sourceImage) override {
-
+        Mat resultImage = Mat(sourceImage.size(), CV_8UC3);
+        Mat paddedImage = this->PadImage(sourceImage, this->_mask / 2);
+        for (int i = 0; i < resultImage.rows; i++)
+            for (int j = 0; j < resultImage.cols; j++)
+            {
+                // 取中間值
+                int value = 0;
+                vector<int> temp;
+                for (int x = 0; x < this->_mask; x++)
+                    for (int y = 0; y < this->_mask; y++)
+                        temp.push_back(paddedImage.at<Vec3b>(i + x, j + y)[0]);
+                std::sort(temp.begin(), temp.end());
+                value = temp[(this->_mask * this->_mask) / 2];
+                resultImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
+            }
+        return resultImage;
     }
 };
 
@@ -53,7 +98,8 @@ public:
     }
 
     Mat FilterImage(const Mat& sourceImage) override {
-
+        Mat resultImage = Mat(sourceImage.size(), CV_8UC3);
+        return resultImage;
     }
 };
 
@@ -72,9 +118,8 @@ public:
     }
 
     // Filter
-    Mat FilterBy(const Mat& sourceImage, FilterType filterType = FilterType::Gaussian, unsigned int times = 1, int mask = 3) {
-        
-        Mat resultImage = Mat(sourceImage.size(), CV_8UC3);
+    Mat FilterBy(const Mat& sourceImage, FilterType filterType = FilterType::Gaussian, int mask = 3, unsigned int times = 1) {
+        Mat resultImage = sourceImage;
         Filter *filter = this->CreateFilter(filterType);
         filter->SetMask(mask);
         while (times--)
