@@ -93,13 +93,60 @@ public:
 class GaussianFilter : public Filter
 {
 public:
+    // 定義 Kernel 型別
+    typedef vector<vector<double>> Kernel;
+
     GaussianFilter() {
 
     }
 
     Mat FilterImage(const Mat& sourceImage) override {
         Mat resultImage = Mat(sourceImage.size(), CV_8UC3);
+        Mat paddedImage = this->PadImage(sourceImage, this->_mask / 2);
+        Kernel kernel = CreateGaussianKernel(this->_mask);
+        for (int i = 0; i < resultImage.rows; i++)
+            for (int j = 0; j < resultImage.cols; j++)
+            {
+                // 
+                double value = 0;
+                for (int x = 0; x < this->_mask; x++)
+                    for (int y = 0; y < this->_mask; y++)
+                        value += paddedImage.at<Vec3b>(i + x, j + y)[0] * kernel[x][y];
+                resultImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
+            }
         return resultImage;
+    }
+
+private:
+    // 創建 Gaussian Kernel
+    Kernel CreateGaussianKernel(int kernelSize, double sigma = -1)
+    {
+        // 未給出 sigma 自動計算
+        if (sigma <= 0)
+            sigma = 0.3 * ((kernelSize - 1.0) * 0.5 - 1.0) + 0.8;
+
+        const int CENTER = kernelSize / 2;
+        Kernel kernel(kernelSize, vector<double>(kernelSize, 0.0));
+
+        // 計算 Gaussian Kernel 中每個元素的值
+        double sum = 0.0;
+        for (int i = 0; i < kernelSize; i++)
+        {
+            for (int j = 0; j < kernelSize; j++)
+            {
+                double x = double(i) - double(CENTER);
+                double y = double(j) - double(CENTER);
+                kernel[i][j] = exp(-(x * x + y * y) / (2.0 * sigma * sigma));
+                sum += kernel[i][j];
+            }
+        }
+
+        // 正規化
+        for (int i = 0; i < kernelSize; i++)
+            for (int j = 0; j < kernelSize; j++)
+                kernel[i][j] /= sum;
+            
+        return kernel;
     }
 };
 
