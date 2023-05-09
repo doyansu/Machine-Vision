@@ -28,12 +28,35 @@ protected:
         int width = image.cols;
         Mat padded = Mat(height + paddingSize * 2, width + paddingSize * 2, image.type());
 
-        // 將原始圖像複製到新的 Mat 對像中心區域
-        image.copyTo(padded(cv::Rect(paddingSize, paddingSize, width, height)));
-
         // 複製邊界像素值
-        copyMakeBorder(image, padded, paddingSize, paddingSize, paddingSize, paddingSize, BORDER_REPLICATE);
+        for (int i = 0; i < padded.rows; ++i)
+        {
+            for (int j = 0; j < padded.cols; ++j)
+            {
+                int ii = i - paddingSize;
+                int jj = j - paddingSize;
 
+                if (ii < 0)
+                {
+                    ii = 0;
+                }
+                else if (ii >= image.rows)
+                {
+                    ii = image.rows - 1;
+                }
+
+                if (jj < 0)
+                {
+                    jj = 0;
+                }
+                else if (jj >= image.cols)
+                {
+                    jj = image.cols - 1;
+                }
+
+                padded.at<Vec3b>(i, j) = image.at<Vec3b>(ii, jj);
+            }
+        }
         return padded;
     }
 };
@@ -240,7 +263,7 @@ public:
 int main() {
     const string IMAGE_FOLDER = "..\\image\\"; // 圖片存放資料夾
     vector<ImageInfo> images;
-
+    
     // 圖片檔名設定
     images.push_back(ImageInfo(IMAGE_FOLDER + "House256_noise.png"));
     images.push_back(ImageInfo(IMAGE_FOLDER + "Lena_gray.png"));
