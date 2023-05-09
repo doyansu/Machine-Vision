@@ -150,6 +150,7 @@ private:
     }
 };
 
+// 存圖片路徑資訊
 class ImageInfo 
 {
 public:
@@ -173,6 +174,22 @@ private:
     fs::path _path;
 };
 
+// 存 Filter 圖片時的資訊
+class FilterCase {
+public:
+    string _caseName;
+    ImageLibrary::FilterType _filterType;
+    int _mask;
+    Mat _resultImage;
+
+    FilterCase(string caseName, ImageLibrary::FilterType filterType, int mask, Mat sourceImage) {
+        _caseName = caseName;
+        _filterType = filterType;
+        _mask = mask;
+        _resultImage = sourceImage;
+    }
+};
+
 int main() {
     const string IMAGE_FOLDER = "..\\image\\"; // 圖片存放資料夾
     vector<ImageInfo> images;
@@ -193,20 +210,24 @@ int main() {
         Mat sourceImage = imread(imageInfo.Path());
         imshow(imageInfo.FileName(), sourceImage);
 
-        // 顯示並儲存圖片
-        auto showWriteImage = [extension = imageInfo.Extension()](string name, Mat image) {
-            imshow(name, image);
-            imwrite(name + extension, image);
+        vector<FilterCase> filterCases = { // Filter Case 設定
+            FilterCase("Mean 3x3", ImageLibrary::FilterType::Mean, 3, sourceImage),
+            FilterCase("Mean 7x7", ImageLibrary::FilterType::Mean, 7, sourceImage),
+            FilterCase("Median 3x3", ImageLibrary::FilterType::Median, 3, sourceImage),
+            FilterCase("Median 7x7", ImageLibrary::FilterType::Median, 7, sourceImage),
+            FilterCase("Gaussian 5x5", ImageLibrary::FilterType::Gaussian, 5, sourceImage)
         };
 
         // Filter
         const int FILTER_TIMES = 7;
         for (int times = 1; times <= FILTER_TIMES; times++) {
-            showWriteImage(imageInfo.FileName() + " Mean mask3 times" + to_string(times), library.FilterBy(sourceImage, ImageLibrary::FilterType::Mean, times, 3));
-            showWriteImage(imageInfo.FileName() + " Mean mask7 times" + to_string(times), library.FilterBy(sourceImage, ImageLibrary::FilterType::Mean, times, 7));
-            showWriteImage(imageInfo.FileName() + " Median mask3 times" + to_string(times), library.FilterBy(sourceImage, ImageLibrary::FilterType::Median, times, 3));
-            showWriteImage(imageInfo.FileName() + " Median mask7 times" + to_string(times), library.FilterBy(sourceImage, ImageLibrary::FilterType::Median, times, 7));
-            showWriteImage(imageInfo.FileName() + " Gaussian mask5 times" + to_string(times), library.FilterBy(sourceImage, ImageLibrary::FilterType::Gaussian, times, 5));
+            for (FilterCase& filterCase : filterCases) {
+                filterCase._resultImage = library.FilterBy(filterCase._resultImage, filterCase._filterType, filterCase._mask);
+                string caseName = imageInfo.FileName() + " " + filterCase._caseName + " times" + to_string(times);
+                string saveName = IMAGE_FOLDER + caseName + imageInfo.Extension();
+                imshow(caseName, filterCase._resultImage);
+                imwrite(saveName, filterCase._resultImage);
+            }
         }
 
         cv::waitKey(0);
