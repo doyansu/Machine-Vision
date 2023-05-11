@@ -11,11 +11,13 @@ class Filter
 public:
     Filter() {}
 
+    // 設定 Mask
     void SetMask(int mask) {
         // 確保 mask 至少為3，且是奇數
         this->_mask = (mask < 3) ? 3 : (mask | 1);
     }
 
+    // 各個 Filter 實作 FilterImage 的方法
     virtual Mat FilterImage(const Mat& sourceImage) = 0;
 
 protected:
@@ -24,35 +26,23 @@ protected:
     // padding 填充圖片
     virtual Mat PadImage(const Mat& image, int paddingSize)
     {
-        int height = image.rows;
-        int width = image.cols;
-        Mat padded = Mat(height + paddingSize * 2, width + paddingSize * 2, image.type());
+        Mat padded = Mat(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.type());
 
         // 複製邊界像素值
-        for (int i = 0; i < padded.rows; ++i)
-        {
-            for (int j = 0; j < padded.cols; ++j)
-            {
+        for (int i = 0; i < padded.rows; i++) {
+            for (int j = 0; j < padded.cols; j++) {
                 int ii = i - paddingSize;
                 int jj = j - paddingSize;
 
                 if (ii < 0)
-                {
                     ii = 0;
-                }
                 else if (ii >= image.rows)
-                {
                     ii = image.rows - 1;
-                }
 
                 if (jj < 0)
-                {
                     jj = 0;
-                }
                 else if (jj >= image.cols)
-                {
                     jj = image.cols - 1;
-                }
 
                 padded.at<Vec3b>(i, j) = image.at<Vec3b>(ii, jj);
             }
@@ -130,7 +120,7 @@ public:
         for (int i = 0; i < resultImage.rows; i++)
             for (int j = 0; j < resultImage.cols; j++)
             {
-                // 
+                // Gaussian
                 double value = 0;
                 for (int x = 0; x < this->_mask; x++)
                     for (int y = 0; y < this->_mask; y++)
@@ -280,7 +270,8 @@ int main() {
         Mat sourceImage = imread(imageInfo.Path());
         imshow(imageInfo.FileName(), sourceImage);
 
-        vector<FilterCase> filterCases = { // Filter Case 設定
+        // Filter Case 設定
+        vector<FilterCase> filterCases = { 
             FilterCase("Mean 3x3", ImageLibrary::FilterType::Mean, 3, sourceImage),
             FilterCase("Mean 7x7", ImageLibrary::FilterType::Mean, 7, sourceImage),
             FilterCase("Median 3x3", ImageLibrary::FilterType::Median, 3, sourceImage),
