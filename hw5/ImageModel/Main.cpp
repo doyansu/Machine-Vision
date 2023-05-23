@@ -42,17 +42,11 @@ private:
 };
 
 int main() {
-    const string IMAGE_FOLDER = "..\\image\\"; // 圖片存放資料夾
-    const string IMAGE_OUTPUT_FOLDER = "..\\image\\result"; // 圖片結果存放資料夾
-
-    if (!fs::exists(IMAGE_FOLDER))
-    {
-
-        return 1;
-    }
+    const string IMAGE_FOLDER = "..\\image\\"; // 資源圖片資料夾
+    const string IMAGE_OUTPUT_FOLDER = "..\\image\\result\\"; // 結果存放資料夾
 
     if (!fs::exists(IMAGE_OUTPUT_FOLDER))
-        std::cout << (fs::create_directory(IMAGE_OUTPUT_FOLDER) ? "Output folder :" + IMAGE_OUTPUT_FOLDER + " created successfully." : "Failed to create Output folder.") << std::endl;
+        std::cout << (fs::create_directory(IMAGE_OUTPUT_FOLDER) ? "Output folder :" + IMAGE_OUTPUT_FOLDER + " created successfully." : "Failed to create output folder.") << std::endl;
 
     vector<ImageInfo> images;
     // 圖片檔名設定
@@ -64,7 +58,7 @@ int main() {
 
     for (ImageInfo imageInfo : images)
     {
-        std::cout << imageInfo.Path() << '\n';
+        std::cout << imageInfo.Path() << std::endl;
 
         // 讀取圖片
         Mat sourceImage = imread(imageInfo.Path());
