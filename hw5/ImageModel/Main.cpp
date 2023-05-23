@@ -43,13 +43,13 @@ private:
 
 int main() {
     const string IMAGE_FOLDER = "..\\image\\"; // 資源圖片資料夾
-    const string IMAGE_OUTPUT_FOLDER = "..\\image\\result\\"; // 結果存放資料夾
+    const string IMAGE_OUTPUT_FOLDER = "..\\image\\output\\"; // 結果存放資料夾
 
     if (!fs::exists(IMAGE_OUTPUT_FOLDER))
         std::cout << (fs::create_directory(IMAGE_OUTPUT_FOLDER) ? "Output folder :" + IMAGE_OUTPUT_FOLDER + " created successfully." : "Failed to create output folder.") << std::endl;
 
-    vector<ImageInfo> images;
     // 圖片檔名設定
+    vector<ImageInfo> images;
     images.push_back(ImageInfo(IMAGE_FOLDER + "House512.png"));
     images.push_back(ImageInfo(IMAGE_FOLDER + "Lena.png"));
     images.push_back(ImageInfo(IMAGE_FOLDER + "Mandrill.png"));
