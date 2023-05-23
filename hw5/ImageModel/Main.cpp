@@ -9,6 +9,12 @@ namespace fs = std::filesystem;
 class ImageLibrary
 {
 public:
+    enum class EdgeType {
+        Vertical,
+        Horizon,
+        Both
+    };
+
     ImageLibrary() {
         
     }
