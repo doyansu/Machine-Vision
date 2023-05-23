@@ -130,7 +130,10 @@ int main() {
 
         // 讀取圖片
         Mat sourceImage = imread(imageInfo.Path());
+        Mat grayImage = library.ConvertToGray(sourceImage);
+
         imshow(imageInfo.FileName(), sourceImage);
+        imshow(imageInfo.FileName(), grayImage);
 
         cv::waitKey(0);
         cv::destroyAllWindows();
