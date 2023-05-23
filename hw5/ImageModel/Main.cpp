@@ -13,8 +13,70 @@ public:
         
     }
 
+    // 灰階
+    Mat ConvertToGray(const Mat& colorImage) {
+        Mat grayImage(colorImage.size(), CV_8UC3);
+
+        for (int i = 0; i < colorImage.rows; i++) {
+            for (int j = 0; j < colorImage.cols; j++) {
+                Vec3b pixel = colorImage.at<Vec3b>(i, j);
+                int grayValue = 0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0];
+                grayImage.at<uchar>(i, j) = grayValue;
+            }
+        }
+        return grayImage;
+    }
+
+    // 二值化
+    Mat ConvertToBinary(const Mat& colorImage, uchar threshold = 128) {
+        Mat grayImage = this->ConvertToGray(colorImage);
+        Mat binaryImage(grayImage.size(), CV_8UC1);
+
+        for (int i = 0; i < grayImage.rows; i++)
+            for (int j = 0; j < grayImage.cols; j++)
+                binaryImage.at<uchar>(i, j) = grayImage.at<uchar>(i, j) > threshold ? 255 : 0;
+        return binaryImage;
+    }
+
+    Mat SobelEdgeDetection(const Mat& sourceImage, EdgeType edgeType = EdgeType::Vertical) {
+
+    }
+
+
+
 private:
-    
+    // padding 複製邊界像素值
+    Mat PadByReplicated(const Mat& image, int paddingSize = 1) {
+        Mat padded = Mat(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.type());
+
+        // 複製邊界像素值
+        for (int i = 0; i < padded.rows; i++) {
+            for (int j = 0; j < padded.cols; j++) {
+                int ii = i - paddingSize;
+                int jj = j - paddingSize;
+
+                if (ii < 0)
+                    ii = 0;
+                else if (ii >= image.rows)
+                    ii = image.rows - 1;
+
+                if (jj < 0)
+                    jj = 0;
+                else if (jj >= image.cols)
+                    jj = image.cols - 1;
+
+                padded.at<Vec3b>(i, j) = image.at<Vec3b>(ii, jj);
+            }
+        }
+        return padded;
+    }
+
+    // padding 使用 0
+    Mat PadByZero(const Mat& image, int paddingSize = 1) {
+        Mat padded = Mat(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.type(), Scalar(0));
+        image.copyTo(padded(Rect(paddingSize, paddingSize, image.cols, image.rows)));
+        return padded;
+    }
 };
 
 // 存圖片路徑資訊
