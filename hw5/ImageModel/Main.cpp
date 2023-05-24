@@ -77,7 +77,7 @@ private:
         return padded;
     }
 
-    // padding 使用 0
+    // padding 使用 0 填充
     Mat PadByZero(const Mat& image, int paddingSize = 1) {
         Mat padded = Mat(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.type(), Scalar(0));
         image.copyTo(padded(Rect(paddingSize, paddingSize, image.cols, image.rows)));
