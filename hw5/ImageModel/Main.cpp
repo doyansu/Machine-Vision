@@ -198,21 +198,6 @@ public:
         return grayImage;
     }
 
-    // 二值化
-    Mat ConvertToBinary(const Mat& colorImage, uchar threshold = 128) {
-        Mat grayImage = this->ConvertToGray(colorImage);
-        Mat binaryImage(grayImage.size(), CV_8UC1);
-
-        for (int i = 0; i < grayImage.rows; i++)
-            for (int j = 0; j < grayImage.cols; j++)
-                binaryImage.at<uchar>(i, j) = grayImage.at<uchar>(i, j) > threshold ? 255 : 0;
-        return binaryImage;
-    }
-
-    Mat SobelEdgeDetection(const Mat& sourceImage, EdgeType edgeType = EdgeType::Vertical) {
-
-    }
-
     // Filter
     Mat FilterBy(const Mat& sourceImage, FilterType filterType = FilterType::Gaussian, int mask = 3, unsigned int times = 1) {
         Mat resultImage = sourceImage;
