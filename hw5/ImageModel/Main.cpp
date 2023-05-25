@@ -277,16 +277,35 @@ int main() {
 
     ImageLibrary library = ImageLibrary();
 
+    // 定義 Sobel Kernel
+    const Kernel<int> sobelX = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
+    const Kernel<int> sobelY = { {-1, -2, -1}, {0, 0, 0}, {1, 2, 1} };
+
+    // 定義 Prewitt Kernel
+    const Kernel<int> prewittX = { {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1} };
+    const Kernel<int> prewittY = { {-1, -1, -1}, {0, 0, 0}, {1, 1, 1} };
+
     for (ImageInfo imageInfo : images)
     {
         std::cout << imageInfo.Path() << std::endl;
 
         // 讀取圖片
         Mat sourceImage = imread(imageInfo.Path());
-        Mat grayImage = library.ConvertToGray(sourceImage);
 
+        // 灰階、Gaussian 過濾
+        Mat grayImage = library.ConvertToGray(sourceImage);
+        Mat filterImage = library.FilterBy(grayImage, ImageLibrary::FilterType::Gaussian, 3);
+        
+        map<ImageLibrary::EdgeType, Mat> sobelResult = library.DetectEdgeByKernel(filterImage, sobelX, sobelY);
+        map<ImageLibrary::EdgeType, Mat> prewittResult = library.DetectEdgeByKernel(filterImage, prewittX, prewittY);
+        
         imshow(imageInfo.FileName(), sourceImage);
-        imshow(imageInfo.FileName(), grayImage);
+        imshow(imageInfo.FileName() + "_Sobel_vertical", sobelResult[ImageLibrary::EdgeType::Vertical]);
+        imshow(imageInfo.FileName() + "_Sobel_horizon", sobelResult[ImageLibrary::EdgeType::Horizon]);
+        imshow(imageInfo.FileName() + "_Sobel_both", sobelResult[ImageLibrary::EdgeType::Both]);
+        imshow(imageInfo.FileName() + "_Prewitt_vertical", prewittResult[ImageLibrary::EdgeType::Vertical]);
+        imshow(imageInfo.FileName() + "_Prewitt_horizon", prewittResult[ImageLibrary::EdgeType::Horizon]);
+        imshow(imageInfo.FileName() + "_Prewitt_both", prewittResult[ImageLibrary::EdgeType::Both]);
 
         cv::waitKey(0);
         cv::destroyAllWindows();
