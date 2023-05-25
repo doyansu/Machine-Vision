@@ -333,7 +333,7 @@ int main() {
 
     for (ImageInfo imageInfo : images)
     {
-        std::cout << imageInfo.Path() << std::endl;
+        std::cout << "process " + imageInfo.Path() << std::endl;
 
         // 讀取圖片
         Mat sourceImage = imread(imageInfo.Path());
@@ -346,6 +346,7 @@ int main() {
         map<ImageLibrary::EdgeType, Mat> sobelResult = library.DetectEdgeByKernel(filterImage, sobelX, sobelY);
         map<ImageLibrary::EdgeType, Mat> prewittResult = library.DetectEdgeByKernel(filterImage, prewittX, prewittY);
         
+        // 顯示結果
         imshow(imageInfo.FileName(), sourceImage);
         imshow(imageInfo.FileName() + "_Sobel_vertical", sobelResult[ImageLibrary::EdgeType::Vertical]);
         imshow(imageInfo.FileName() + "_Sobel_horizon", sobelResult[ImageLibrary::EdgeType::Horizon]);
@@ -354,6 +355,7 @@ int main() {
         imshow(imageInfo.FileName() + "_Prewitt_horizon", prewittResult[ImageLibrary::EdgeType::Horizon]);
         imshow(imageInfo.FileName() + "_Prewitt_both", prewittResult[ImageLibrary::EdgeType::Both]);
 
+        // 儲存圖片
         imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_vertical" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Vertical]);
         imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_horizon" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Horizon]);
         imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_both" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Both]);
@@ -364,6 +366,8 @@ int main() {
         cv::waitKey(0);
         cv::destroyAllWindows();
     }
+
+    std::cout << "processing complete!" << std::endl;
 
     return 0;
 }
