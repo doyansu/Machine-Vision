@@ -211,15 +211,18 @@ public:
 
     // For Sobel and Prewitt
     map<EdgeType, Mat> DetectEdgeByKernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY) {
-        Mat verticalImage(sourceImage.size(), CV_8UC3);
-        Mat horizonImage(sourceImage.size(), CV_8UC3);
-        Mat bothImage(sourceImage.size(), CV_8UC3);
+        // return setting
+        map<EdgeType, Mat> resultMap;
+        Mat& verticalImage = resultMap[EdgeType::Vertical] = Mat(sourceImage.size(), CV_8UC3);
+        Mat& horizonImage = resultMap[EdgeType::Horizon] = Mat(sourceImage.size(), CV_8UC3);
+        Mat& bothImage = resultMap[EdgeType::Both] = Mat(sourceImage.size(), CV_8UC3);
+
         // padding
         Mat padded = this->PadByZero(sourceImage, kernelX.size() / 2);
-        Kernel<int> tempG(sourceImage.rows, vector<int>(sourceImage.cols));
         
         // 計算 gx, gy, G = |gx| + |gy|
         int max = 0;
+        Kernel<int> tempG(sourceImage.rows, vector<int>(sourceImage.cols));
         for (int i = 0; i < sourceImage.rows; i++) {
             for (int j = 0; j < sourceImage.cols; j++) {
                 int gx = 0;
@@ -247,11 +250,6 @@ public:
                 int value = tempG[i][j] * 255 / max;
                 bothImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
             }
-        
-        map<EdgeType, Mat> resultMap;
-        resultMap[EdgeType::Vertical] = verticalImage;
-        resultMap[EdgeType::Horizon] = horizonImage;
-        resultMap[EdgeType::Both] = bothImage;
         return resultMap;
     }
 
