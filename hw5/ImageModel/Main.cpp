@@ -8,7 +8,7 @@ namespace fs = std::filesystem;
 
 // 定義 Kernel 型別
 template <typename content>
-using Kernel = std::vector<vector<content>>;
+using Kernel = vector<vector<content>>;
 
 class Filter
 {
@@ -192,7 +192,7 @@ public:
             for (int j = 0; j < colorImage.cols; j++) {
                 Vec3b pixel = colorImage.at<Vec3b>(i, j);
                 int grayValue = 0.3 * pixel[2] + 0.59 * pixel[1] + 0.11 * pixel[0];
-                grayImage.at<uchar>(i, j) = grayValue;
+                grayImage.at<Vec3b>(i, j) = Vec3b(grayValue, grayValue, grayValue);
             }
         }
         return grayImage;
@@ -207,6 +207,52 @@ public:
             resultImage = filter->FilterImage(resultImage);
         delete filter;
         return resultImage;
+    }
+
+    // For Sobel and Prewitt
+    map<EdgeType, Mat> DetectEdgeByKernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY) {
+        Mat verticalImage(sourceImage.size(), CV_8UC3);
+        Mat horizonImage(sourceImage.size(), CV_8UC3);
+        Mat bothImage(sourceImage.size(), CV_8UC3);
+        // padding
+        Mat padded = this->PadByZero(sourceImage, kernelX.size() / 2);
+        Kernel<int> tempG(sourceImage.rows, vector<int>(sourceImage.cols));
+        
+        // 計算 gx, gy, G = |gx| + |gy|
+        int max = 0;
+        for (int i = 0; i < sourceImage.rows; i++) {
+            for (int j = 0; j < sourceImage.cols; j++) {
+                int gx = 0;
+                for (int m = 0; m < kernelX.size(); m++)
+                    for (int n = 0; n < kernelX.size(); n++)
+                        gx += padded.at<Vec3b>(i + m, j + n)[0] * kernelX[m][n];
+                verticalImage.at<Vec3b>(i, j) = Vec3b((gx >> 16) & 255, (gx >> 8) & 255, gx & 255);
+
+                int gy = 0;
+                for (int m = 0; m < kernelX.size(); m++)
+                    for (int n = 0; n < kernelX.size(); n++)
+                        gy += padded.at<Vec3b>(i + m, j + n)[0] * kernelY[m][n];
+                horizonImage.at<Vec3b>(i, j) = Vec3b((gy >> 16) & 255, (gy >> 8) & 255, gy & 255);
+
+                int G = abs(gx) + abs(gy);
+                tempG[i][j] = G;
+                max = max < G ? G : max;
+            }
+        }
+        
+        // 正規化
+        for (int i = 1; i < sourceImage.rows - 1; i++)
+            for (int j = 1; j < sourceImage.cols - 1; j++)
+            {
+                int value = tempG[i][j] * 255 / max;
+                bothImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
+            }
+        
+        map<EdgeType, Mat> resultMap;
+        resultMap[EdgeType::Vertical] = verticalImage;
+        resultMap[EdgeType::Horizon] = horizonImage;
+        resultMap[EdgeType::Both] = bothImage;
+        return resultMap;
     }
 
 private:
