@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <filesystem> // ISO C++17 標準 (/std:c++17)
 #include <opencv2/opencv.hpp>
+#include <functional>
 
 using namespace std;
 using namespace cv;
@@ -198,6 +199,16 @@ public:
         return grayImage;
     }
 
+    // 二值化
+    Mat ConvertToBinary(const Mat& grayImage, uchar threshold = 128) {
+        Mat binaryImage(grayImage.size(), CV_8UC3);
+
+        for (int i = 0; i < grayImage.rows; i++)
+            for (int j = 0; j < grayImage.cols; j++)
+                binaryImage.at<Vec3b>(i, j) = grayImage.at<Vec3b>(i, j)[0] > threshold ? Vec3b(255, 255, 255) : Vec3b(0, 0, 0);
+        return binaryImage;
+    }
+
     // Filter
     Mat FilterBy(const Mat& sourceImage, FilterType filterType = FilterType::Gaussian, int mask = 3, unsigned int times = 1) {
         Mat resultImage = sourceImage;
@@ -209,8 +220,31 @@ public:
         return resultImage;
     }
 
-    // For Sobel and Prewitt
-    map<EdgeType, Mat> DetectEdgeByKernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY) {
+    // Sobel Edge Detect
+    map<EdgeType, Mat> Sobel(const Mat& sourceImage) {
+        // 定義 Sobel Kernel
+        const Kernel<int> sobelKernelX = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
+        const Kernel<int> sobelKernelY = { {-1, -2, -1}, {0, 0, 0}, {1, 2, 1} };
+        return DetectEdgeBy2Kernel(sourceImage, sobelKernelX, sobelKernelY);
+    }
+
+    // Prewitt Edge Detect
+    map<EdgeType, Mat> Prewitt(const Mat& sourceImage) {
+        // 定義 Prewitt Kernel
+        const Kernel<int> prewittKernelX = { {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1} };
+        const Kernel<int> prewittKernelY = { {-1, -1, -1}, {0, 0, 0}, {1, 1, 1} };
+        return DetectEdgeBy2Kernel(sourceImage, prewittKernelX, prewittKernelY);
+    }
+
+    // Laplacian Edge Detect
+    Mat Laplacian(const Mat& sourceImage, const Kernel<int>& kernel) {
+        const Kernel<int> zeroKernelX = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+        return DetectEdgeBy2Kernel(sourceImage, kernel, zeroKernelX)[EdgeType::Both];
+    }
+
+private:
+    // 進行
+    map<EdgeType, Mat> DetectEdgeBy2Kernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY) {
         // return setting
         map<EdgeType, Mat> resultMap;
         Mat& verticalImage = resultMap[EdgeType::Vertical] = Mat(sourceImage.size(), CV_8UC3);
@@ -219,7 +253,7 @@ public:
 
         // padding
         Mat padded = this->PadByZero(sourceImage, kernelX.size() / 2);
-        
+
         // 計算 gx, gy, G = |gx| + |gy|
         int max = 0;
         Kernel<int> tempG(sourceImage.rows, vector<int>(sourceImage.cols));
@@ -244,8 +278,8 @@ public:
         }
         
         // 正規化
-        for (int i = 1; i < sourceImage.rows - 1; i++)
-            for (int j = 1; j < sourceImage.cols - 1; j++)
+        for (int i = 0; i < sourceImage.rows; i++)
+            for (int j = 0; j < sourceImage.cols; j++)
             {
                 int value = tempG[i][j] * 255 / max;
                 bothImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
@@ -253,7 +287,13 @@ public:
         return resultMap;
     }
 
-private:
+    // padding 使用 0 填充
+    Mat PadByZero(const Mat& image, int paddingSize = 1) {
+        Mat padded = Mat(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.type(), Scalar(0));
+        image.copyTo(padded(Rect(paddingSize, paddingSize, image.cols, image.rows)));
+        return padded;
+    }
+
     Filter* CreateFilter(FilterType filterType) {
         Filter* filter = nullptr;
         switch (filterType)
@@ -272,13 +312,6 @@ private:
             break;
         }
         return filter;
-    }
-
-    // padding 使用 0 填充
-    Mat PadByZero(const Mat& image, int paddingSize = 1) {
-        Mat padded = Mat(image.rows + paddingSize * 2, image.cols + paddingSize * 2, image.type(), Scalar(0));
-        image.copyTo(padded(Rect(paddingSize, paddingSize, image.cols, image.rows)));
-        return padded;
     }
 };
 
@@ -321,13 +354,9 @@ int main() {
 
     ImageLibrary library = ImageLibrary();
 
-    // 定義 Sobel Kernel
-    const Kernel<int> sobelX = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
-    const Kernel<int> sobelY = { {-1, -2, -1}, {0, 0, 0}, {1, 2, 1} };
-
-    // 定義 Prewitt Kernel
-    const Kernel<int> prewittX = { {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1} };
-    const Kernel<int> prewittY = { {-1, -1, -1}, {0, 0, 0}, {1, 1, 1} };
+    // 定義 Laplacian Kernel
+    const Kernel<int> laplacianKernel1 = { {0, 1, 0}, {1, -4, 1}, {0, 1, 0} };
+    const Kernel<int> laplacianKernel2 = { {1, 1, 1}, {1, -8, 1}, {1, 1, 1} };
 
     for (ImageInfo imageInfo : images)
     {
@@ -341,8 +370,10 @@ int main() {
         Mat filterImage = library.FilterBy(grayImage, ImageLibrary::FilterType::Gaussian, 3);
         
         // 邊緣偵測
-        map<ImageLibrary::EdgeType, Mat> sobelResult = library.DetectEdgeByKernel(filterImage, sobelX, sobelY);
-        map<ImageLibrary::EdgeType, Mat> prewittResult = library.DetectEdgeByKernel(filterImage, prewittX, prewittY);
+        map<ImageLibrary::EdgeType, Mat> sobelResult = library.Sobel(filterImage);
+        map<ImageLibrary::EdgeType, Mat> prewittResult = library.Prewitt(filterImage);
+        Mat laplacianResult1 = library.Laplacian(filterImage, laplacianKernel1);
+        Mat laplacianResult2 = library.Laplacian(filterImage, laplacianKernel2);
         
         // 顯示結果
         imshow(imageInfo.FileName(), sourceImage);
@@ -352,6 +383,8 @@ int main() {
         imshow(imageInfo.FileName() + "_Prewitt_vertical", prewittResult[ImageLibrary::EdgeType::Vertical]);
         imshow(imageInfo.FileName() + "_Prewitt_horizon", prewittResult[ImageLibrary::EdgeType::Horizon]);
         imshow(imageInfo.FileName() + "_Prewitt_both", prewittResult[ImageLibrary::EdgeType::Both]);
+        imshow(imageInfo.FileName() + "_Laplacian_1", laplacianResult1);
+        imshow(imageInfo.FileName() + "_Laplacian_2", laplacianResult2);
 
         // 儲存圖片
         imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_vertical" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Vertical]);
