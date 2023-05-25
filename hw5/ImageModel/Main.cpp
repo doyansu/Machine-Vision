@@ -221,30 +221,30 @@ public:
     }
 
     // Sobel Edge Detect
-    map<EdgeType, Mat> Sobel(const Mat& sourceImage) {
+    map<EdgeType, Mat> Sobel(const Mat& sourceImage, uchar threshold = 128) {
         // 定義 Sobel Kernel
         const Kernel<int> sobelKernelX = { {-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1} };
         const Kernel<int> sobelKernelY = { {-1, -2, -1}, {0, 0, 0}, {1, 2, 1} };
-        return DetectEdgeBy2Kernel(sourceImage, sobelKernelX, sobelKernelY);
+        return DetectEdgeBy2Kernel(sourceImage, sobelKernelX, sobelKernelY, threshold);
     }
 
     // Prewitt Edge Detect
-    map<EdgeType, Mat> Prewitt(const Mat& sourceImage) {
+    map<EdgeType, Mat> Prewitt(const Mat& sourceImage, uchar threshold = 128) {
         // 定義 Prewitt Kernel
         const Kernel<int> prewittKernelX = { {-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1} };
         const Kernel<int> prewittKernelY = { {-1, -1, -1}, {0, 0, 0}, {1, 1, 1} };
-        return DetectEdgeBy2Kernel(sourceImage, prewittKernelX, prewittKernelY);
+        return DetectEdgeBy2Kernel(sourceImage, prewittKernelX, prewittKernelY, threshold);
     }
 
     // Laplacian Edge Detect
-    Mat Laplacian(const Mat& sourceImage, const Kernel<int>& kernel) {
+    Mat Laplacian(const Mat& sourceImage, const Kernel<int>& kernel, uchar threshold = 128) {
         const Kernel<int> zeroKernelX = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
-        return DetectEdgeBy2Kernel(sourceImage, kernel, zeroKernelX)[EdgeType::Both];
+        return DetectEdgeBy2Kernel(sourceImage, kernel, zeroKernelX, threshold)[EdgeType::Both];
     }
 
 private:
     // 進行
-    map<EdgeType, Mat> DetectEdgeBy2Kernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY) {
+    map<EdgeType, Mat> DetectEdgeBy2Kernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY, uchar threshold = 128) {
         map<EdgeType, Mat> resultMap;
         Mat& verticalImage = resultMap[EdgeType::Vertical] = Mat(sourceImage.size(), CV_8UC3);
         Mat& horizonImage = resultMap[EdgeType::Horizon] = Mat(sourceImage.size(), CV_8UC3);
@@ -280,7 +280,7 @@ private:
         for (int i = 0; i < sourceImage.rows; i++)
             for (int j = 0; j < sourceImage.cols; j++)
             {
-                int value = tempG[i][j] * 255 / max;
+                int value = tempG[i][j] * 255 / max > threshold ? 255 : 0;
                 bothImage.at<Vec3b>(i, j) = Vec3b(value, value, value);
             }
         return resultMap;
@@ -318,8 +318,14 @@ private:
 class ImageInfo 
 {
 public:
-    ImageInfo(string path) {
+    uchar _sobelThreshold, _prewittThreshold, _laplacian1Threshold, _laplacian2Threshold;
+
+    ImageInfo(string path, uchar prewittThreshold, uchar sobelThreshold, uchar laplacian1Threshold, uchar laplacian2Threshold) {
         this->_path = fs::path(path);
+        this->_sobelThreshold = prewittThreshold;
+        this->_prewittThreshold = sobelThreshold;
+        this->_laplacian1Threshold = laplacian1Threshold;
+        this->_laplacian2Threshold = laplacian2Threshold;
     };
 
     string Path() {
@@ -347,9 +353,9 @@ int main() {
 
     // 圖片檔名設定
     vector<ImageInfo> images;
-    images.push_back(ImageInfo(IMAGE_FOLDER + "House512.png"));
-    images.push_back(ImageInfo(IMAGE_FOLDER + "Lena.png"));
-    images.push_back(ImageInfo(IMAGE_FOLDER + "Mandrill.png"));
+    images.push_back(ImageInfo(IMAGE_FOLDER + "House512.png", 32, 32, 10, 12));
+    images.push_back(ImageInfo(IMAGE_FOLDER + "Lena.png", 40, 40, 10, 12));
+    images.push_back(ImageInfo(IMAGE_FOLDER + "Mandrill.png", 45, 45, 12, 15));
 
     ImageLibrary library = ImageLibrary();
 
@@ -369,18 +375,18 @@ int main() {
         Mat filterImage = library.FilterBy(grayImage, ImageLibrary::FilterType::Gaussian, 3);
         
         // 邊緣偵測
-        map<ImageLibrary::EdgeType, Mat> sobelResult = library.Sobel(filterImage);
-        map<ImageLibrary::EdgeType, Mat> prewittResult = library.Prewitt(filterImage);
-        Mat laplacianResult1 = library.Laplacian(filterImage, laplacianKernel1);
-        Mat laplacianResult2 = library.Laplacian(filterImage, laplacianKernel2);
+        map<ImageLibrary::EdgeType, Mat> sobelResult = library.Sobel(filterImage, imageInfo._sobelThreshold);
+        map<ImageLibrary::EdgeType, Mat> prewittResult = library.Prewitt(filterImage, imageInfo._prewittThreshold);
+        Mat laplacianResult1 = library.Laplacian(filterImage, laplacianKernel1, imageInfo._laplacian1Threshold);
+        Mat laplacianResult2 = library.Laplacian(filterImage, laplacianKernel2, imageInfo._laplacian2Threshold);
         
         // 顯示結果
         imshow(imageInfo.FileName(), sourceImage);
-        imshow(imageInfo.FileName() + "_Sobel_vertical", sobelResult[ImageLibrary::EdgeType::Vertical]);
-        imshow(imageInfo.FileName() + "_Sobel_horizon", sobelResult[ImageLibrary::EdgeType::Horizon]);
+        //imshow(imageInfo.FileName() + "_Sobel_vertical", sobelResult[ImageLibrary::EdgeType::Vertical]);
+        //imshow(imageInfo.FileName() + "_Sobel_horizon", sobelResult[ImageLibrary::EdgeType::Horizon]);
         imshow(imageInfo.FileName() + "_Sobel_both", sobelResult[ImageLibrary::EdgeType::Both]);
-        imshow(imageInfo.FileName() + "_Prewitt_vertical", prewittResult[ImageLibrary::EdgeType::Vertical]);
-        imshow(imageInfo.FileName() + "_Prewitt_horizon", prewittResult[ImageLibrary::EdgeType::Horizon]);
+        //imshow(imageInfo.FileName() + "_Prewitt_vertical", prewittResult[ImageLibrary::EdgeType::Vertical]);
+        //imshow(imageInfo.FileName() + "_Prewitt_horizon", prewittResult[ImageLibrary::EdgeType::Horizon]);
         imshow(imageInfo.FileName() + "_Prewitt_both", prewittResult[ImageLibrary::EdgeType::Both]);
         imshow(imageInfo.FileName() + "_Laplacian_1", laplacianResult1);
         imshow(imageInfo.FileName() + "_Laplacian_2", laplacianResult2);
