@@ -342,6 +342,7 @@ int main() {
         Mat grayImage = library.ConvertToGray(sourceImage);
         Mat filterImage = library.FilterBy(grayImage, ImageLibrary::FilterType::Gaussian, 3);
         
+        // 邊緣偵測
         map<ImageLibrary::EdgeType, Mat> sobelResult = library.DetectEdgeByKernel(filterImage, sobelX, sobelY);
         map<ImageLibrary::EdgeType, Mat> prewittResult = library.DetectEdgeByKernel(filterImage, prewittX, prewittY);
         
@@ -352,6 +353,13 @@ int main() {
         imshow(imageInfo.FileName() + "_Prewitt_vertical", prewittResult[ImageLibrary::EdgeType::Vertical]);
         imshow(imageInfo.FileName() + "_Prewitt_horizon", prewittResult[ImageLibrary::EdgeType::Horizon]);
         imshow(imageInfo.FileName() + "_Prewitt_both", prewittResult[ImageLibrary::EdgeType::Both]);
+
+        imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_vertical" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Vertical]);
+        imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_horizon" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Horizon]);
+        imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Sobel_both" + imageInfo.Extension(), sobelResult[ImageLibrary::EdgeType::Both]);
+        imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Prewitt_vertical" + imageInfo.Extension(), prewittResult[ImageLibrary::EdgeType::Vertical]);
+        imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Prewitt_horizon" + imageInfo.Extension(), prewittResult[ImageLibrary::EdgeType::Horizon]);
+        imwrite(IMAGE_OUTPUT_FOLDER + imageInfo.FileName() + "_Prewitt_both" + imageInfo.Extension(), prewittResult[ImageLibrary::EdgeType::Both]);
 
         cv::waitKey(0);
         cv::destroyAllWindows();
