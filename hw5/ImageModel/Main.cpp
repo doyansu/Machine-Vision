@@ -245,7 +245,6 @@ public:
 private:
     // 進行
     map<EdgeType, Mat> DetectEdgeBy2Kernel(const Mat& sourceImage, const Kernel<int>& kernelX, const Kernel<int>& kernelY) {
-        // return setting
         map<EdgeType, Mat> resultMap;
         Mat& verticalImage = resultMap[EdgeType::Vertical] = Mat(sourceImage.size(), CV_8UC3);
         Mat& horizonImage = resultMap[EdgeType::Horizon] = Mat(sourceImage.size(), CV_8UC3);
